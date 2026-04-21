@@ -1,0 +1,91 @@
+# 4. Recursive Descent Parser
+
+class LeftMostParser:
+    def __init__(self):
+        self.string = ""
+        self.index = 0
+
+    def parse(self, input_string):
+        self.string = input_string
+        self.index = 0
+        try:
+            tree = self.A()
+            if tree and self.index == len(self.string):
+                return tree
+        except:
+            return None
+
+    def match(self, char):
+        if self.index < len(self.string) and self.string[self.index] == char:
+            self.index += 1
+            return char
+        return None
+
+    def A(self):
+        start = self.index
+        
+        if self.match('a') and self.match('b') and self.match('c'):
+            return {'A': ['a','b','c']}
+        
+        self.index = start
+        if self.match('a'):
+            b_tree = self.B()
+            if b_tree and self.match('d'):
+                return {'A': ['a', b_tree, 'd']}
+        
+        self.index = start
+        if self.match('a'):
+            a_tree = self.A()
+            if a_tree and self.D():
+                return {'A': ['a', a_tree, self.D()]}
+        
+        self.index = start
+        return None
+
+    def B(self):
+        start = self.index
+        if self.match('b'):
+            b_tree = self.B()
+            if b_tree:
+                return {'B': ['b', b_tree]}
+        self.index = start
+        return {'B': ['ε']}
+
+    def C(self):
+        return {'C': ['d']} if self.match('d') else {'C': ['ε']}
+
+    def D(self):
+        if self.match('a') or self.match('b'):
+            return {'D': [self.string[self.index-1]]}
+        return {'D': ['ε']}
+
+def display_tree(node, indent="", last=True):
+    if isinstance(node, dict):
+        for key, children in node.items():
+            print(f"{indent}{'└── ' if last else '├── '}{key}")
+            new_indent = indent + ("    " if last else "│   ")
+            for i, child in enumerate(children):
+                display_tree(child, new_indent, i == len(children)-1)
+    else:
+        print(f"{indent}{'└── ' if last else '├── '}{node}")
+
+def main():
+    print("--- Grammar ---")
+    print("A -> abc | aBd | aAD")
+    print("B -> bB | ε")
+    print("D -> a | b | ε\n")
+    
+    target = input("Enter string: ").strip()
+    parser = LeftMostParser()
+    result = parser.parse(target)
+    
+    if result:
+        print(f"\nSuccess! Parse Tree for '{target}':")
+        key = list(result.keys())[0]
+        print(key)
+        for i, child in enumerate(result[key]):
+            display_tree(child, "", i == len(result[key])-1)
+    else:
+        print("\nInvalid String")
+
+main()
