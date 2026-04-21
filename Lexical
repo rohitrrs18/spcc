@@ -1,0 +1,88 @@
+# 1. Lexical Analyzer using FA
+
+keywords = {"if", "else", "while", "int", "float", "return", "main", "char", "for", "void", "printf", "scanf", "do", "switch", "continue", "default"}
+
+# ---------- Lexical Analyzer ----------
+def lexical_analyzer(code):
+    i = 0
+    n = len(code)
+
+    # Counters
+    count_kw = count_id = count_num = 0
+    count_op = count_sep = count_lit = 0
+
+    while i < n:
+
+        # Skip spaces
+        if code[i].isspace():
+            i += 1
+            continue
+
+        # ---------- Identifier / Keyword ----------
+        if code[i].isalpha():
+            token = ""
+            while i < n and code[i].isalnum():
+                token += code[i]
+                i += 1
+
+            if token in keywords:
+                print(token, "-> Keyword")
+                count_kw += 1
+            else:
+                print(token, "-> Identifier")
+                count_id += 1
+
+        # ---------- Number ----------
+        elif code[i].isdigit():
+            token = ""
+            while i < n and code[i].isdigit():
+                token += code[i]
+                i += 1
+
+            print(token, "-> Number")
+            count_num += 1
+
+        # ---------- String Literal ----------
+        elif code[i] == '"':
+            token = '"'
+            i += 1
+            while i < n and code[i] != '"':
+                token += code[i]
+                i += 1
+            token += '"'
+            i += 1
+
+            print(token, "-> Literal")
+            count_lit += 1
+
+        # ---------- Operators ----------
+
+        elif code[i] in "+-*/=<>!%&|":
+            print(code[i], "-> Operator")
+            count_op += 1
+            i += 1
+
+        # ---------- Separators ----------
+        elif code[i] in "(){}[];,":
+            print(code[i], "-> Separator")
+            count_sep += 1
+            i += 1
+
+        # ---------- Unknown ----------
+        else:
+            print(code[i], "-> Unknown")
+            i += 1
+
+    # ---------- Final Count ----------
+    print("\nCounts:")
+    print("Keywords:", count_kw)
+    print("Identifiers:", count_id)
+    print("Numbers:", count_num)
+    print("Operators:", count_op)
+    print("Separators:", count_sep)
+    print("Literals:", count_lit)
+
+
+# ---------- Input ----------
+code = input("Enter code: ")
+lexical_analyzer(code)
