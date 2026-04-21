@@ -1,0 +1,21 @@
+# 6. Code Generation Phase of Compiler
+
+OPTAB = {"+": "ADD", "-": "SUB", "*": "MUL", "/": "DIV"}
+REG = ["R1", "R2", "R3"]
+
+def generate_code():
+    n = int(input("Enter Number of statements: "))
+    statements = [input() for i in range(n)]
+    
+    print("\nMachine Code:\n")
+    
+    for i, line in enumerate(statements):
+        parts = line.split()
+        res, op1, op, op2 = parts[0], parts[2], parts[3], parts[4]
+        reg = REG[i % 3]
+        
+        print(f"MOV {reg}, {op1}")
+        print(f"{OPTAB[op]} {reg}, {op2}")
+        print(f"MOV {res}, {reg}\n")
+
+generate_code()
