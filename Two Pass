@@ -1,0 +1,89 @@
+# 3. Two Pass Assembler
+START_ADDRESS = 2000
+OPCODES = {
+    'MOV':'10','LDA':'11','STA':'12','LXI':'13','MVI':'14',
+    'ADD':'20','ADC':'21','SUB':'22','SBB':'23','INR':'24',
+    'JMP':'40','JC':'41','JNC':'42','JZ':'43','JNZ':'44',
+    'CALL':'49','RET':'4A','HLT':'72','NOP':'73'
+}
+symbol_table = {}
+machine_code = []
+used_opcodes = set()
+
+print("Enter Assembly Program (type END to finish):")
+source_code = []
+while True:
+    line = input()
+    if line.strip().upper() == "END":
+        break
+    source_code.append(line)
+
+# Pass 1: Find used opcodes
+for line in source_code:
+    line = line.strip()
+    if not line:
+        continue
+    if ":" in line:
+        line = line.split(":",1)[1].strip()
+    if line:
+        mnemonic = line.split()[0]
+        if mnemonic in OPCODES:
+            used_opcodes.add(mnemonic)
+
+print("\nOPCODE TABLE (USED ONLY)")
+print("Instruction   Opcode")
+print("----------------------")
+for inst in sorted(used_opcodes):
+    print(f"{inst:<12} {OPCODES[inst]}")
+
+# Pass 1: Build symbol table
+location_counter = 0
+for line in source_code:
+    line = line.strip()
+    if not line:
+        continue
+    if ":" in line:
+        label, rest = line.split(":",1)
+        symbol_table[label.strip()] = START_ADDRESS + location_counter
+        line = rest.strip()
+    if line:
+        location_counter += 1
+
+# Pass 2: Generate machine code
+location_counter = 0
+for line in source_code:
+    original = line.strip()
+    line = line.strip()
+    if not line:
+        continue
+    
+    if ":" in line:
+        line = line.split(":",1)[1].strip()
+    
+    address = START_ADDRESS + location_counter
+    
+    if not line:
+        continue
+    
+    parts = line.split()
+    if parts[0] in OPCODES:
+        opcode = OPCODES[parts[0]]
+        if len(parts) == 2:
+            operand = symbol_table.get(parts[1], 0)
+            machine = opcode + f"{operand:04d}"
+        else:
+            machine = opcode + "0000"
+        machine_code.append((address, original, machine))
+        location_counter += 1
+
+print("\nSYMBOL TABLE")
+print("Symbol      Address")
+print("-------------------")
+for sym, addr in symbol_table.items():
+    print(f"{sym:<10} {addr}")
+
+print("\nMACHINE CODE")
+print("Address    Assembly               Machine Code")
+print("------------------------------------------------")
+for addr, asm, mc in machine_code:
+    print(f"{addr:<10} {asm:<22} {mc}")
