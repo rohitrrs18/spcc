@@ -1,0 +1,84 @@
+# 7B. YACC Implementation
+import re
+token_spec = [
+    ("NUMBER", r'\d+'), ("PLUS", r'\+'), ("MINUS", r'\-'),
+    ("TIMES", r'\*'), ("DIVIDE", r'\/'), ("LPAREN", r'\('),
+    ("RPAREN", r'\)'), ("SKIP", r'[ \t]+'), ("MISMATCH", r'.')
+]
+
+tok_regex = '|'.join(f'(?P<{name}>{pattern})' for name, pattern in token_spec)
+
+def lexer(code):
+    for mo in re.finditer(tok_regex, code):
+        kind = mo.lastgroup
+        val = mo.group()
+        if kind == "SKIP":
+            continue
+        if kind == "MISMATCH":
+            raise RuntimeError(f'Invalid: {val}')
+        yield (kind, int(val) if kind == "NUMBER" else val)
+
+class Parser:
+    def __init__(self, tokens):
+        self.tokens, self.pos = tokens, 0
+
+    def curr(self):
+        return self.tokens[self.pos] if self.pos < len(self.tokens) else None
+
+    def eat(self, typ):
+        if self.curr() and self.curr()[0] == typ:
+            self.pos += 1
+        else:
+            raise SyntaxError(f"Expected {typ}, got {self.curr()}")
+
+    def parse(self):
+        res = self.expr()
+        if self.curr():
+            raise SyntaxError("Extra input")
+        return res
+
+    def expr(self):
+        res = self.term()
+        while self.curr() and self.curr()[0] in ("PLUS", "MINUS"):
+            if self.curr()[0] == "PLUS":
+                self.eat("PLUS")
+                res += self.term()
+            else:
+                self.eat("MINUS")
+                res -= self.term()
+        return res
+
+    def term(self):
+        res = self.factor()
+        while self.curr() and self.curr()[0] in ("TIMES", "DIVIDE"):
+            if self.curr()[0] == "TIMES":
+                self.eat("TIMES")
+                res *= self.factor()
+            else:
+                self.eat("DIVIDE")
+                res /= self.factor()
+        return res
+
+    def factor(self):
+        tok = self.curr()
+        if not tok:
+            raise SyntaxError("Unexpected end")
+        
+        if tok[0] == "NUMBER":
+            self.eat("NUMBER")
+            return tok[1]
+        if tok[0] == "LPAREN":
+            self.eat("LPAREN")
+            res = self.expr()
+            self.eat("RPAREN")
+            return res
+        if tok[0] == "MINUS":
+            self.eat("MINUS")
+            return -self.factor()
+        raise SyntaxError(f"Unexpected: {tok}")
+
+code = "3 * 4 + (5 - 2)"
+tokens = list(lexer(code))
+parser = Parser(tokens)
+print("Tokens:", tokens)
+print("Result:", parser.parse())
