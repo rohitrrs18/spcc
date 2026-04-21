@@ -1,0 +1,86 @@
+# 5. Two Pass Macro Processor
+
+program = [
+    "MACRO",
+    "SUM &A &B",
+    "ADD &A, &B",
+    "MEND",
+    "START",
+    "SUM X Y",
+    "END"
+]
+
+MNT = []   # Macro Name Table
+MDT = []   # Macro Definition Table
+ALA = []   # Argument List Array
+IC = []    # Intermediate Code
+
+# PASS 1
+def pass1():
+    i = 0
+    while i < len(program):
+        if program[i] == "MACRO":
+            i += 1
+            parts = program[i].split()
+            name = parts[0]
+            args = parts[1:]
+            
+            MNT.append((len(MNT)+1, name, len(MDT)+1))
+            for arg in args:
+                ALA.append(arg)
+            
+            MDT.append(program[i])
+            i += 1
+            
+            while program[i] != "MEND":
+                MDT.append(program[i])
+                i += 1
+            MDT.append("MEND")
+        else:
+            IC.append(program[i])
+        i += 1
+
+# PASS 2
+def pass2():
+    output = []
+    for line in IC:
+        parts = line.split()
+        if parts and parts[0] == MNT[0][1]:
+            arg_map = dict(zip(ALA, parts[1:]))
+            for mline in MDT:
+                if mline not in ["MEND", MNT[0][1]]:
+                    new_line = mline
+                    for key, val in arg_map.items():
+                        new_line = new_line.replace(key, val)
+                    output.append(new_line)
+        else:
+            output.append(line)
+    return output
+
+# Display
+def display():
+    print("\n----- PASS 1 -----")
+    print("\nIntermediate Code:")
+    for line in IC:
+        print(line)
+    
+    print("\n----- MNT -----")
+    print("Index\tName\tMDT_Index")
+    for idx, name, mdt_idx in MNT:
+        print(f"{idx}\t{name}\t{mdt_idx}")
+    
+    print("\n----- MDT -----")
+    for i, line in enumerate(MDT, 1):
+        print(f"{i}\t{line}")
+    
+    print("\n----- ALA -----")
+    for i, arg in enumerate(ALA, 1):
+        print(f"{i}\t{arg}")
+
+# Main
+pass1()
+display()
+print("\n----- PASS 2 -----")
+print("\n----- EXPANDED CODE -----")
+for line in pass2():
+    print(line)
